@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+    <style>
+        #wrapper{
+            position:relative;
+        }
+        #codeGolf{
+            background-color: black;
+            color:white;
+            margin:10px;
+            padding:10px;
+        }
+    </style>
+    <body>
+        <div id="wrapper">
+            <h2>ASCII Poker Chip Stacker</h2>
+            <p>Enter an amount, and see the poker chip equivalent in stacks</p>
+            <input type="text" id="money" name="money1" value="">
+            <button onclick="finalFuncs()">Calculate chips</button>
+            <p id="demo"> </p>
+            <div id="intro">
+                <p>This was another challenge I saw on Code Golf stack exchange. I used it to practice recursion in JS, implementing a few cases in my program. The rules and challenge were as follows:<br></p>
+                
+                <section id="codeGolf">Poker has etiquette in how you arrange your chips, often enforced in tournaments - your chips may not be "hidden" from your opponents by being behind others, mostly to not hide some large denomination chip(s). <br><br>The Challenge: We are going to be playing poker in ASCII, so we need to write a function or program that will draw our ASCII chip stack arrangement given its total value, n.<br><br>Input
+                - A positive integer, n (up to 2**32-1 should be handled)
+                    <br><br>
+                Output
+                 - An ASCII representation of the stack arrangement as defined below.<br>
+                This may contain white-space to the right of each line such that no line is longer than one more character than the length used by printable characters in the longest (bottom) line;<br>
+                This may contain a single trailing new line; and<br>
+                The characters representing chips may be in lowercase if you prefer.<br><br>
+                The stack arrangement will:
+                <ul>
+                    <li>Contain the fewest chips possible, given the denominations (see below);</li>
+                    <li>Will have equal valued chips in "stacks" (columns);</li>
+                    <li>Be ordered such that the shorter stacks are to the right of taller stacks; and</li>
+                    <li>Be ordered such that stacks with greater denomination chips will be to the right of equal sized stacks of lower denominations (representing that they are visible to our opponent(s) on the right)</li>
+                </ul>
+                The chips themselves are to be represented as individual characters identifying their colour:<br><br>
+                    White : 1    = W<br>
+                    Red : 5    = R<br>
+                    Green : 25   = G<br>
+                    Black : 100  = B<br>
+                    Yellow : 500  = Y<br>
+                    Pink : 1K   = P<br>
+                    Orange : 5K   = O<br>
+                    Cyan : 25K  = C<br>
+                    Magenta : 100K = M<br>
+                    Aqua-blue : 500K = A<br>
+                    Lavender : 1M   = L<br>
+                    Indigo : 5M   = I<br>
+                    Turquoise : 25M  = T<br>
+                    Violet : 100M = V<br>
+                    Silver : 500M = S<br><br>
+                    <h3>Example</h3>
+
+For n = 276352 the smallest number of chips would be:
+
+2 * 100K + 3 * 25K + 1 * 1K + 3 * 100 + 2 * 25 + 2 * 1=<br>
+    MM         CCC       P        BBB       GG       WW<br><br>
+                    Now we must place these chips into actual stacks, to make our output:<br><br>
+
+BC<br>
+BCWGM<br>
+BCWGMP<br>
+                </section>
+            </div>
+        </div>
+        <script>
+            var newArr=[];
+            var chipQuant=[];
+            var chipsExisting=[];
+            var tmpQuants=[];
+            var sortQuants=[];
+            var chips=[["W","R","G","B","Y","P","O","C","M","A","L","I","T","V","S"],[1,5,25,100,500,1000,5000,25000,100000,500000,1000000,5000000,25000000,100000000,500000000]];
+            var printStacks="";
+            
+            function calcChips(amt,chipArrLength){ //first calculate the least number of chips the amount of money is, using recursion
+                if(chipArrLength==0){
+                    return;
+                }
+                else{
+                    var chipIndx=chipArrLength-1;
+                    chipQuant.unshift(Math.floor(amt/chips[1][chipIndx]));
+                    var amtRem=amt%(chips[1][chipIndx]);
+                    calcChips(amtRem,chipIndx);
+                }
+            }
+            
+            function existingChips(arr){  //take out all the chips that aren't there, where quant=0
+                for(i=0;i<arr.length;i++){
+                    if(arr[i]>0){
+                        chipsExisting.push(chips[0][i]);
+                        tmpQuants.push(arr[i]);
+                    }
+                }
+            }
+
+            function selSort(arr, arr1){ //recursively sort the chips using selection sort, based on amount present, and also sort the corresponding symbols
+                if(arr.length==0){
+                    return;
+                }
+                else{
+                    var smallest=Math.min(...arr);
+                    var indxSmall=arr.indexOf(smallest);
+                    sortQuants.unshift(smallest);
+                    newArr.unshift(arr1[indxSmall]);
+                    arr.splice(indxSmall,1);
+                    arr1.splice(indxSmall,1);
+                    selSort(arr,arr1);
+                }
+            }
+            
+            function printChips(quantArr, letterArr){ //recursively print the chip symbols, creating "stacks"
+                if(Math.max(...quantArr)==0){
+                    return;
+                }
+                else{
+                    var tmpLine="";
+                    for(i=0;i<quantArr.length;i++){
+                        if(quantArr[i]>0){
+                            tmpLine=tmpLine+letterArr[i]+" ";
+                            quantArr[i]=quantArr[i]-1;
+                        }
+                    }
+                    printStacks=tmpLine+"<br>"+printStacks;
+                    printChips(quantArr, letterArr);
+                }
+            }
+                        
+            function finalFuncs(){ //call all the functions on click, and reset all the variables as well
+                var amtInput=document.getElementById("money").value;
+                newArr=[];
+                chipQuant=[];
+                chipsExisting=[];
+                tmpQuants=[];
+                sortQuants=[];
+                printStacks="";
+                
+                calcChips(amtInput,15);
+                console.log(chipQuant);
+                existingChips(chipQuant);
+                console.log(chipsExisting, tmpQuants);
+                selSort(tmpQuants, chipsExisting);
+                console.log(newArr, sortQuants);
+                printChips(sortQuants, newArr);
+                console.log(printStacks);
+                document.getElementById("demo").innerHTML=printStacks;
+            }
+            
+        </script>
+    </body>
+</html>
